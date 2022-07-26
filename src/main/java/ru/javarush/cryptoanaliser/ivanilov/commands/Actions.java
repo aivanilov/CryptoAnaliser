@@ -1,12 +1,13 @@
 package ru.javarush.cryptoanaliser.ivanilov.commands;
 
 import ru.javarush.cryptoanaliser.ivanilov.exceptions.ApplicationException;
+import ru.javarush.cryptoanaliser.ivanilov.utilities.FileOperator;
 
 public enum Actions {
-    // лучше сделать map (имя команды, сама команда)
-    // можно сделать контейнер, собирающий все команды
 
-    ENCODE (new Encoder()), DECODE(new Decoder());
+    ENCODE (new Encoder()),
+    BRUTEFORCE (new Bruteforcer()),
+    ANALYZE (new Analyzer());
 
     private final Action action;
 
