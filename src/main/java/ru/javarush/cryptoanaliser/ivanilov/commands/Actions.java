@@ -1,8 +1,6 @@
 package ru.javarush.cryptoanaliser.ivanilov.commands;
 
 import ru.javarush.cryptoanaliser.ivanilov.exceptions.ApplicationException;
-import ru.javarush.cryptoanaliser.ivanilov.utilities.FileOperator;
-
 public enum Actions {
 
     ENCODE (new Encoder()),
@@ -17,8 +15,7 @@ public enum Actions {
 
     public static Action find(String command) {
         try {
-            Action action = Actions.valueOf(command.toUpperCase()).action;
-            return action;
+            return Actions.valueOf(command.toUpperCase()).action;
         } catch (RuntimeException e) {
             throw new ApplicationException("The command has not been found");
         }

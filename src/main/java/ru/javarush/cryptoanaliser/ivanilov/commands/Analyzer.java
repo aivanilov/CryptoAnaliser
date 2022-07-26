@@ -8,101 +8,69 @@ import java.util.*;
 
 public class Analyzer extends Coder implements Action {
 
-    private String text;
+    private String encryptedText;
     private String destination;
-    private TreeMap<Character, Double> dictionaryLetterOccurance;
+    private Map<Character, Double> dictLetterStats;
 
     @Override
     public Result execute(String[] parameters) {
         extractParameters(parameters);
-        String analizedText = analizeText(text.toLowerCase(), dictionaryLetterOccurance);
+        String analizedText = analizeText(encryptedText.toLowerCase(), dictLetterStats);
         FileOperator.exportToFile(destination, analizedText);
         return new Result(ResultCode.OK, analizedText);
     }
 
     void extractParameters(String[] parameters) {
-        String dictionary = FileOperator.getText(parameters[0]);
-        text = FileOperator.getText(parameters[1]).toLowerCase();
+        String dict = FileOperator.getText(parameters[0]);
+        encryptedText = FileOperator.getText(parameters[1]).toLowerCase();
         destination = parameters[2];
-        dictionaryLetterOccurance = getLetterOccuranceFrequency(dictionary.toLowerCase());
+        dictLetterStats = getLetterStats(dict.toLowerCase());
     }
 
-    private TreeMap<Character, Double> getLetterOccuranceFrequency(String text) {
-        Map<Character, Integer> letterOccuranceQuantity = new HashMap<>();
-        TreeMap<Character, Double> letterOccuranceFrequency = new TreeMap<>();
+    private Map<Character, Double> getLetterStats(String text) {
+        Map<Character, Integer> letterQuantity = new HashMap<>();
+        Map<Character, Double> letterStats = new HashMap<>();
 
         for (int i = 0; i < text.length(); i++) {
             char letter = text.charAt(i);
 
-            if (letterOccuranceQuantity.containsKey(letter)) {
-                int quantity = letterOccuranceQuantity.get(letter);
-                letterOccuranceQuantity.put(letter, quantity + 1);
+            if (letterQuantity.containsKey(letter)) {
+                int quantity = letterQuantity.get(letter);
+                letterQuantity.put(letter, quantity + 1);
             } else {
-                letterOccuranceQuantity.put(letter, 0);
+                letterQuantity.put(letter, 0);
             }
         }
 
-        for (var entry : letterOccuranceQuantity.entrySet()) {
-            letterOccuranceFrequency.put(entry.getKey(), (double) entry.getValue() / text.length());
+        for (var entry : letterQuantity.entrySet()) {
+            letterStats.put(entry.getKey(), (double) entry.getValue() / text.length());
         }
 
-        return letterOccuranceFrequency;
+        return letterStats;
     }
 
-    private String analizeText(String text, TreeMap<Character, Double> dictionaryLetterOccurance) {
-        var textLetterOccurance = getLetterOccuranceFrequency(text.toLowerCase());
-        TreeMap<Double, Character> textLetterOccuranceByDouble = swapKeysAndValuesInTreeMap(textLetterOccurance);
-        TreeMap<Double, Character> dictionaryLetterOccuranceByDouble = swapKeysAndValuesInTreeMap(dictionaryLetterOccurance);
+    private String analizeText(String text, Map<Character, Double> dictLetterStats) {
+        Map<Character, Character> letterMapping = new HashMap<>();
+        var textLetterStats = getLetterStats(text.toLowerCase());
+
+        List<Map.Entry<Character, Double>> textLetterByOccurance = new ArrayList<>(textLetterStats.entrySet());
+        List<Map.Entry<Character, Double>> dictLetterByOccurance = new ArrayList<>(dictLetterStats.entrySet());
+
+        textLetterByOccurance.sort((o1, o2) -> Double.compare(o2.getValue(), o1.getValue()));
+        System.out.println(textLetterByOccurance);
+        dictLetterByOccurance.sort((o1, o2) -> Double.compare(o2.getValue(), o1.getValue()));
+        System.out.println(dictLetterByOccurance);
+
+        for (int i = 0; i < textLetterByOccurance.size() && i < dictLetterByOccurance.size(); i++) {
+            letterMapping.put(textLetterByOccurance.get(i).getKey(), dictLetterByOccurance.get(i).getKey());
+        }
 
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < text.length(); i++) {
             char letter = text.charAt(i);
-            double letterOccurance = textLetterOccurance.get(letter);
-            char decryptedLetter = findClosestKeyInDictionaryMap(letterOccurance, dictionaryLetterOccuranceByDouble);
-            stringBuilder.append(decryptedLetter);
+            stringBuilder.append(letterMapping.get(letter));
         }
 
         return stringBuilder.toString();
-    }
-
-    private char findClosestKeyInDictionaryMap(double letterOccurance, TreeMap<Double, Character> dictionaryLetterOccuranceByDouble) {
-        boolean hasCeiling = dictionaryLetterOccuranceByDouble.ceilingKey(letterOccurance) != null;
-        boolean hasFloor = dictionaryLetterOccuranceByDouble.floorKey(letterOccurance) != null;
-
-        if (hasCeiling && hasFloor)  {
-            double ceiling = dictionaryLetterOccuranceByDouble.ceilingKey(letterOccurance);
-            double floor = dictionaryLetterOccuranceByDouble.floorKey(letterOccurance);
-            if ((ceiling - letterOccurance) < (floor - letterOccurance))
-                return dictionaryLetterOccuranceByDouble.get(ceiling);
-            else
-                return dictionaryLetterOccuranceByDouble.get(floor);
-        }
-
-        if (hasCeiling) {
-            double ceiling = dictionaryLetterOccuranceByDouble.ceilingKey(letterOccurance);
-            return dictionaryLetterOccuranceByDouble.get(ceiling);
-        }
-
-        if (hasFloor) {
-            double floor = dictionaryLetterOccuranceByDouble.floorKey(letterOccurance);
-            return dictionaryLetterOccuranceByDouble.get(floor);
-        }
-
-        return 0;
-    }
-
-    private TreeMap<Double, Character> swapKeysAndValuesInTreeMap(TreeMap<Character, Double> treeMap) {
-        TreeMap<Double, Character> swappedMap = new TreeMap<>(new Comparator<Double>() {
-            @Override
-            public int compare(Double o1, Double o2) {
-                return Double.compare(o2, o1);
-            }
-        });
-
-        for (var entry : treeMap.entrySet()) {
-            swappedMap.put(entry.getValue(), entry.getKey());
-        }
-
-        return swappedMap;
     }
 }
