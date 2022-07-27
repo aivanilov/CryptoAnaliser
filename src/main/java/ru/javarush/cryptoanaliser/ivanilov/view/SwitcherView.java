@@ -7,6 +7,7 @@ import ru.javarush.cryptoanaliser.ivanilov.entities.Result;
 import java.util.Scanner;
 
 public class SwitcherView implements Runnable {
+
     boolean isRunning = false;
     private static final Scanner scanner = new Scanner(System.in);
 
